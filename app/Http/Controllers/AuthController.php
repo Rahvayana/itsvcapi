@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -33,7 +32,7 @@ class AuthController extends Controller
                 ];
             }
         $user = User::where('email', $request->email)->first();
-        if ($user) {
+        if ($user&&$user->id_syncro!=null) {
             if (Hash::check($request->get('password'), $user->password)) {
                     return response()->json(
                         ['data'=>$user->id_syncro, 'status'=>200,'message'=>'Success Retrieve Id Syncro']
@@ -43,6 +42,10 @@ class AuthController extends Controller
                     ['status'=>404,'message'=>'Password Not Match']
                 );    
             }
+        }if ($user&&$user->id_syncro==null) {
+            return response()->json(
+                ['status'=>404,'message'=>'Account Not Found']
+            );    
         }
         else{
             return response()->json(
@@ -81,5 +84,24 @@ class AuthController extends Controller
                 ['data'=>$user->id, 'status'=>200,'message'=>'Success Retrieve Id']
             );
         }
+    }
+
+    public function updateIdSyncro(Request $request)
+    {
+        $user=User::where('email',$request->email)->first();
+        if($user){
+            $user=new User();
+            $user=User::where('email',$request->email)->first();
+            $user->id_syncro=$request->id_syncro;
+            $user->save();
+            return response()->json(
+                ['data'=>$user->id_syncro, 'status'=>200,'message'=>'Success Retrieve Id']
+            );
+        }else{
+            return response()->json(
+                ['status'=>404,'message'=>'User Not Found']
+            );
+        }
+        
     }
 }
